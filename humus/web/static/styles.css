@@ -1,0 +1,10 @@
+body {
+  background-color: #ACCDFF;
+}
+
+#text-display {
+  resize: both;
+  overflow: auto;
+  background-color: white;
+  border: 1px solid #000;
+}
