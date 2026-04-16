@@ -1,6 +1,7 @@
 from flask import Flask, redirect, render_template, request
 
-from ..text import Text, ConstantSpaceStrategy
+from ..text import Operation, Text
+from ..text.decay import ConstantSpaceStrategy
 from ..persistence import CSVPersistenceStrategy
 
 text = Text(

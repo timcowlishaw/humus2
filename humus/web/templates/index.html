@@ -9,13 +9,13 @@
   </head>
   <body>
     <pre>"Put everything on the rotchain, the very mutable ledger where things change constantly and kind of just disappear over time." -- <a href="https://web.archive.org/web/20211118074812/https://twitter.com/APndrgrst/status/1461239757246136321" target="_blank">(Anna Prendergrast (@Aprndrgrst), 18th November 2021)</a></pre>
-    <div class="text" contenteditable="true" id="text-display">
-      {{ text }}
+    <div id="text-container">
+      <pre class="text" contenteditable="true" id="text-display">{{ text|safe }}</pre>
+      <form action="/" method="post" id="form">
+        <input name="text" type="hidden" id="text-input" />
+        <input type="submit" value="Update!" />
+      </form>
     </div>
-    <form action="/" method="post" id="form">
-      <input name="text" type="hidden" id="text-input" />
-      <input type="submit" value="Update!" />
-    </form>
     <script src="{{ url_for('static', filename='application.js') }}"></script>
   </body>
 </html>

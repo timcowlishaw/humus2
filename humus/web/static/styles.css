@@ -2,9 +2,35 @@ body {
   background-color: #ACCDFF;
 }
 
-#text-display {
+#text-container {
+  position: relative;
+  width: 33%;
+  height: 20rem;
   resize: both;
   overflow: auto;
   background-color: white;
   border: 1px solid #000;
+}
+
+#form {
+  position: absolute;
+  bottom: 1rem;
+  right: 1rem;
+  z-index: 2;
+}
+
+#text-display {
+  position: absolute;
+  white-space: pre-wrap;
+  overflow: auto;
+  top: 0;
+  bottom: 1.5rem;
+  right: 0;
+  left: 0;
+  z-index: 1;
+  margin: 0.5rem;
+  font-size: 1.2rem;
+  &:focus {
+    outline: 0px solid transparent;
+  }
 }
