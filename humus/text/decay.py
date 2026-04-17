@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from random import random
+from time import time
 from typing import TYPE_CHECKING, Protocol, override
 
 from .operations import Insertion, Operation
@@ -52,6 +54,29 @@ class ConstantSpaceStrategy(TextDecayStrategy):
             if overflow > 0:
                 overflow -= op.size
             else:
+                new_ops.append(op)
+        return new_ops
+
+    @override
+    def update_callback(self, text: Text) -> None:
+        text.ops = self.apply(text)
+
+
+class RandomlyExponentialStrategy(TextDecayStrategy):
+
+    def __init__(self, halflife: float = 300):
+        self.halflife: float = halflife
+
+    @override
+    def apply(self, text: Text, now: float | None = None) -> list[Operation]:
+        if now is None:
+            now = time()
+        new_ops: list[Operation] = []
+        for op in text.ops:
+            age = now - op.timestamp
+            decay_prob = 1 - 2 ** (-age / self.halflife)
+            print(age, decay_prob, op)
+            if random() >= decay_prob:
                 new_ops.append(op)
         return new_ops
 
