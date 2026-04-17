@@ -1,2 +1,4 @@
+from .operations import Operation as Operation
 from .text import Text as Text
-from .operations import Insertion as Insertion, Deletion as Deletion, Operation as Operation
+
+__all__ = ["Text", "Operation"]

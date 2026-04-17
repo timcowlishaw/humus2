@@ -1,5 +1,5 @@
 body {
-  background-color: #ACCDFF;
+  background-color: #accdff;
 }
 
 #text-container {
@@ -23,28 +23,24 @@ body {
   position: absolute;
   white-space: pre-wrap;
   overflow: auto;
-  top: 0;
-  bottom: 1.5rem;
-  right: 0;
-  left: 0;
+  inset: 0 0 1.5rem;
   z-index: 1;
   margin: 0.5rem;
   font-size: 1.2rem;
+
   &:focus {
-    outline: 0px solid transparent;
+    outline: 0 solid transparent;
   }
 }
 
 .old-1 {
-  background-color: #FFDD99;
+  background-color: #fd9;
 }
 
 .old-2 {
-  background-color: #DDAA55;
+  background-color: #da5;
 }
 
 .old-3 {
-  background-color: #CC9933;
+  background-color: #c93;
 }
-
-

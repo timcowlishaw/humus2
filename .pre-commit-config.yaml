@@ -1,0 +1,60 @@
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.6.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-toml
+      - id: check-merge-conflict
+      - id: check-case-conflict
+
+  - repo: https://github.com/psf/black
+    rev: 24.4.2
+    hooks:
+      - id: black
+
+  - repo: https://github.com/PyCQA/isort
+    rev: 5.13.2
+    hooks:
+      - id: isort
+        args: ["--profile", "black"]
+
+  - repo: https://github.com/PyCQA/flake8
+    rev: 7.1.0
+    hooks:
+      - id: flake8
+
+  - repo: https://github.com/pre-commit/mirrors-prettier
+    rev: v4.0.0-alpha.8
+    hooks:
+      - id: prettier
+        types_or: [css, yaml, markdown, javascript, toml]
+
+  - repo: https://github.com/djlint/djLint
+    rev: v1.34.1
+    hooks:
+      - id: djlint-reformat-jinja
+        files: .html$
+        types_or: ["html"]
+      - id: djlint-jinja
+        files: .html$
+        types_or: ["html"]
+
+  - repo: https://github.com/thibaudcolas/pre-commit-stylelint
+    rev: v14.4.0
+    hooks:
+      - id: stylelint
+        additional_dependencies:
+          - stylelint@16.9.0
+          - stylelint-config-standard@36.0.1
+        args: [--fix]
+
+  - repo: local
+    hooks:
+      - id: mypy
+        name: mypy
+        entry: mypy
+        files: ^humus/
+        types: ["python"]
+        language: "system"
+        args: ["--strict"]

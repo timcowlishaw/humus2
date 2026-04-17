@@ -7,7 +7,7 @@ document.addEventListener("DOMContentLoaded", (loadEvent) => {
     input.value = display.innerText;
   });
 
-  display.addEventListener('beforeinput', (e) => {
+  display.addEventListener("beforeinput", (e) => {
     const sel = window.getSelection();
     if (!sel.rangeCount) return;
     const range = sel.getRangeAt(0);
@@ -15,7 +15,10 @@ document.addEventListener("DOMContentLoaded", (loadEvent) => {
     let node = range.startContainer;
     let oldSpan = null;
     while (node && node !== display) {
-      if (node.nodeType === Node.ELEMENT_NODE && node.classList.contains('old')) {
+      if (
+        node.nodeType === Node.ELEMENT_NODE &&
+        node.classList.contains("old")
+      ) {
         oldSpan = node;
         break;
       }
@@ -31,15 +34,15 @@ document.addEventListener("DOMContentLoaded", (loadEvent) => {
     const before = fullText.slice(0, offset);
     const after = fullText.slice(offset);
 
-    const userSpan = document.createElement('span');
-    userSpan.className = 'user-edit';
-    userSpan.textContent = '';
+    const userSpan = document.createElement("span");
+    userSpan.className = "user-edit";
+    userSpan.textContent = "";
 
     const parent = oldSpan.parentNode;
-    const oldClass = oldSpan.className
+    const oldClass = oldSpan.className;
 
     if (before) {
-      const spanBefore = document.createElement('span');
+      const spanBefore = document.createElement("span");
       spanBefore.className = oldClass;
       spanBefore.textContent = before;
       parent.insertBefore(spanBefore, oldSpan);
@@ -48,7 +51,7 @@ document.addEventListener("DOMContentLoaded", (loadEvent) => {
     parent.insertBefore(userSpan, oldSpan);
 
     if (after) {
-      const spanAfter = document.createElement('span');
+      const spanAfter = document.createElement("span");
       spanAfter.className = oldClass;
       spanAfter.textContent = after;
       parent.insertBefore(spanAfter, oldSpan);
@@ -63,17 +66,17 @@ document.addEventListener("DOMContentLoaded", (loadEvent) => {
     sel.addRange(newRange);
 
     if (e.data) {
-      document.execCommand('insertText', false, e.data);
+      document.execCommand("insertText", false, e.data);
     }
   });
 
-  display.addEventListener('input', () => {
+  display.addEventListener("input", () => {
     const sel = window.getSelection();
     const range = sel.rangeCount ? sel.getRangeAt(0) : null;
-    Array.from(display.childNodes).forEach(node => {
+    Array.from(display.childNodes).forEach((node) => {
       if (node.nodeType === Node.TEXT_NODE && node.textContent.length > 0) {
-        const span = document.createElement('span');
-        span.className = 'new';
+        const span = document.createElement("span");
+        span.className = "new";
         display.insertBefore(span, node);
         span.appendChild(node);
       }

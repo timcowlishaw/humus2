@@ -1,37 +1,54 @@
+from __future__ import annotations
+
+from abc import ABC, abstractmethod
 from time import time
-from typing import override, Protocol
+from typing import override
 
-from ..persistence import Serializable
+from ..persistence import NotDeserializableError, Serializable, Serialization
 
 
-type SerializableOp = tuple[str, float, int, int | None, str | None]
+class Operation(Serializable, ABC):
 
-class Operation(Serializable[SerializableOp], Protocol):
+    timestamp: float
 
-    timestamp : float
-
-    def __init__(self, timestamp : float | None = None):
+    def __init__(self, timestamp: float | None = None):
         if timestamp is None:
             timestamp = time()
         self.timestamp = timestamp
 
-    @property
-    def size(self) -> int:
-        ...
+    @override
+    @classmethod
+    def from_serialized(cls, serialization: Serialization) -> Operation:
+        (tag, timestamp, position, length, text) = serialization
+        if tag == "i":
+            return Insertion(int(position), text, float(timestamp))
+        elif tag == "d":
+            return Deletion(int(position), int(length), float(timestamp))
+        else:
+            raise NotDeserializableError
 
-    def apply(self, _previous : str) -> str:
-        ...
+    @property
+    @abstractmethod
+    def size(self) -> int: ...
+
+    @abstractmethod
+    def apply(self, _previous: str) -> str: ...
+
 
 class Insertion(Operation):
 
-    def __init__(self, position : int, text : str, timestamp : float | None = None):
-        self.position : int = position
-        self.text : str = text
+    def __init__(self, position: int, text: str, timestamp: float | None = None):
+        self.position: int = position
+        self.text: str = text
         super(Insertion, self).__init__(timestamp)
 
     @override
     def __repr__(self) -> str:
-        return f"Insertion(position: {self.position}, text: '{self.text}', timestamp: {self.timestamp})"
+        return (
+            f"Insertion(position: {self.position}, "
+            f"text: '{self.text}',"
+            f"timestamp: {self.timestamp})"
+        )
 
     @property
     @override
@@ -40,24 +57,28 @@ class Insertion(Operation):
 
     @property
     @override
-    def serializable(self) -> SerializableOp:
-        return ("i", self.timestamp, self.position, None, self.text)
+    def serializable(self) -> Serialization:
+        return ("i", str(self.timestamp), str(self.position), "", self.text)
 
     @override
-    def apply(self, previous : str) -> str:
-        return previous[:self.position] + self.text + previous[self.position:]
+    def apply(self, previous: str) -> str:
+        return previous[: self.position] + self.text + previous[self.position :]
 
 
 class Deletion(Operation):
 
-    def __init__(self, position : int, length : int, timestamp : float | None = None):
-        self.position : int = position
-        self.length : int = length
+    def __init__(self, position: int, length: int, timestamp: float | None = None):
+        self.position: int = position
+        self.length: int = length
         super(Deletion, self).__init__(timestamp)
 
     @override
-    def __repr__(self):
-        return f"Deletion(position: {self.position}, length: {self.length}, timestamp: {self.timestamp})"
+    def __repr__(self) -> str:
+        return (
+            f"Deletion(position: {self.position}, "
+            f"length: {self.length}, "
+            f"timestamp: {self.timestamp})"
+        )
 
     @property
     @override
@@ -66,10 +87,9 @@ class Deletion(Operation):
 
     @property
     @override
-    def serializable(self) -> SerializableOp:
-        return ("d", self.timestamp, self.position, self.length, None)
+    def serializable(self) -> Serialization:
+        return ("d", str(self.timestamp), str(self.position), str(self.length), "")
 
     @override
-    def apply(self, previous : str) -> str:
-        return previous[:self.position] + previous[self.position+self.length:]
-
+    def apply(self, previous: str) -> str:
+        return previous[: self.position] + previous[self.position + self.length :]
