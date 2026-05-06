@@ -2,8 +2,174 @@ document.addEventListener("DOMContentLoaded", (loadEvent) => {
   const form = document.getElementById("form");
   const input = document.getElementById("text-input");
   const display = document.getElementById("text-display");
+  const world = document.getElementById("world");
+  const wrapper = document.getElementById("wrapper");
 
-  form.addEventListener("submit", (submitEvent) => {
+  let panning = false,
+    draggable = null,
+    tx = 0,
+    ty = 0,
+    scale = 1,
+    dragOffsetX,
+    dragOffsetY,
+    panStartX,
+    panStartY,
+    panStartTx,
+    panStartTy;
+  const MIN_SCALE = 0.1,
+    MAX_SCALE = 8;
+
+  function applyTransform() {
+    world.style.transform = `translate(${tx}px,${ty}px) scale(${scale})`;
+  }
+
+  function clampScale(s) {
+    return Math.min(MAX_SCALE, Math.max(MIN_SCALE, s));
+  }
+
+  function setupDraggable(element) {
+    element.addEventListener("mousedown", (e) => {
+      e.stopPropagation();
+      draggable = element;
+      element.classList.add("dragging");
+
+      const rect = wrapper.getBoundingClientRect();
+      const mx = e.clientX - rect.left;
+      const my = e.clientY - rect.top;
+
+      const elementX = parseFloat(element.style.left);
+      const elementY = parseFloat(element.style.top);
+      dragOffsetX = (mx - tx) / scale - elementX;
+      dragOffsetY = (my - ty) / scale - elementY;
+    });
+
+    element.addEventListener(
+      "touchstart",
+      (e) => {
+        e.stopPropagation();
+        draggable = element;
+        element.classList.add("dragging");
+
+        const rect = wrapper.getBoundingClientRect();
+        const mx = e.clientX - rect.left;
+        const my = e.clientY - rect.top;
+
+        const elementX = parseFloat(element.style.left);
+        const elementY = parseFloat(element.style.top);
+
+        dragOffsetX = (mx - tx) / scale - elementX;
+        dragOffsetY = (my - ty) / scale - elementY;
+      },
+      { passsive: true },
+    );
+  }
+
+  wrapper.addEventListener(
+    "wheel",
+    (e) => {
+      e.preventDefault();
+      const rect = wrapper.getBoundingClientRect();
+      const mx = e.clientX - rect.left;
+      const my = e.clientY - rect.top;
+      const delta = e.deltaY < 0 ? 1.1 : 0.909;
+      const newScale = clampScale(scale * delta);
+      tx = mx - (mx - tx) * (newScale / scale);
+      ty = my - (my - ty) * (newScale / scale);
+      scale = newScale;
+      applyTransform();
+    },
+    { passive: false },
+  );
+
+  wrapper.addEventListener("mousedown", (e) => {
+    if (e.target.closest(".draggable")) return;
+    panning = true;
+    panStartX = e.clientX;
+    panStartY = e.clientY;
+    panStartTx = tx;
+    panStartTy = ty;
+    wrapper.classList.add("panning");
+  });
+
+  window.addEventListener("mousemove", (e) => {
+    if (panning) {
+      tx = panStartTx + (e.clientX - panStartX);
+      ty = panStartTy + (e.clientY - panStartY);
+      applyTransform();
+    }
+
+    if (draggable) {
+      const rect = wrapper.getBoundingClientRect();
+      const mx = e.clientX - rect.left;
+      const my = e.clientY - rect.top;
+
+      draggable.style.left = (mx - tx) / scale - dragOffsetX + "px";
+      draggable.style.top = (my - ty) / scale - dragOffsetY + "px";
+    }
+  });
+
+  window.addEventListener("mouseup", () => {
+    panning = false;
+    wrapper.classList.remove("panning");
+    if (draggable) {
+      draggable.classList.remove("dragging");
+      draggable = null;
+    }
+  });
+
+  wrapper.addEventListener(
+    "touchstart",
+    (e) => {
+      if (e.touches.length === 1) {
+        if (e.target.closest(".draggable")) return;
+        panning = true;
+        panStartX = e.touches[0].clientX;
+        panStartY = e.touches[0].clientY;
+        panStartTx = tx;
+        panStartTy = ty;
+      }
+    },
+    { passive: true },
+  );
+
+  wrapper.addEventListener(
+    "touchmove",
+    (e) => {
+      if (e.touches.length === 1 && panning) {
+        e.preventDefault();
+        tx = panStartTx + (e.touches[0].clientX - panStartX);
+        ty = panStartTy + (e.touches[0].clientY - panStartY);
+        applyTransform();
+      }
+
+      if (e.touches.length === 1 && draggable) {
+        const rect = wrapper.getBoundingClientRect();
+        const mx = e.touches[0].clientX - rect.left;
+        const my = e.touches[0].clientY - rect.top;
+
+        draggable.style.left = (mx - tx) / scale - dragOffsetX + "px";
+        draggable.style.top = (my - ty) / scale - dragOffsetY + "px";
+      }
+    },
+    { passive: false },
+  );
+
+  wrapper.addEventListener("touchend", () => {
+    panning = false;
+    if (draggable) {
+      draggable.classList.remove("dragging");
+      draggable = null;
+    }
+  });
+
+  wrapper.addEventListener("dblclick", () => {
+    tx = 0;
+    ty = 0;
+    scale = 1;
+    applyTransform();
+  });
+
+  form.addEventListener("submit", (_submitEvent) => {
     input.value = display.innerText;
   });
 
@@ -86,5 +252,9 @@ document.addEventListener("DOMContentLoaded", (loadEvent) => {
       sel.removeAllRanges();
       sel.addRange(range);
     }
+  });
+
+  document.querySelectorAll(".draggable").forEach(function (element) {
+    setupDraggable(element);
   });
 });
