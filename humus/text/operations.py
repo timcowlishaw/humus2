@@ -4,10 +4,10 @@ from abc import ABC, abstractmethod
 from time import time
 from typing import override
 
-from ..persistence import NotDeserializableError, Serializable, Serialization
+from ..persistence import NotDeserializableError
 
 
-class Operation(Serializable, ABC):
+class Operation(ABC):
 
     timestamp: float
 
@@ -16,9 +16,8 @@ class Operation(Serializable, ABC):
             timestamp = time()
         self.timestamp = timestamp
 
-    @override
     @classmethod
-    def from_serialized(cls, serialization: Serialization) -> Operation:
+    def from_serialized(cls, serialization: tuple[str, ...]) -> Operation:
         (tag, timestamp, position, length, text) = serialization
         if tag == "i":
             return Insertion(int(position), text, float(timestamp))
@@ -30,6 +29,10 @@ class Operation(Serializable, ABC):
     @property
     @abstractmethod
     def size(self) -> int: ...
+
+    @property
+    @abstractmethod
+    def serialization(self) -> tuple[str, ...]: ...
 
     @abstractmethod
     def apply(self, _previous: str) -> str: ...
@@ -57,7 +60,7 @@ class Insertion(Operation):
 
     @property
     @override
-    def serializable(self) -> Serialization:
+    def serialization(self) -> tuple[str, ...]:
         return ("i", str(self.timestamp), str(self.position), "", self.text)
 
     @override
@@ -87,7 +90,7 @@ class Deletion(Operation):
 
     @property
     @override
-    def serializable(self) -> Serialization:
+    def serialization(self) -> tuple[str, ...]:
         return ("d", str(self.timestamp), str(self.position), str(self.length), "")
 
     @override

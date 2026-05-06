@@ -1,63 +1,136 @@
 from __future__ import annotations
 
-from collections.abc import Iterable
+import csv
+import os
 from difflib import SequenceMatcher
-from typing import Callable, Self, cast, override
+from random import random
+from time import time
+from typing import Callable, Protocol, Self, override
 
-from ..persistence import (
-    NoOpPersistenceStrategy,
-    Persistable,
-    PersistenceStrategy,
-    Serialization,
-)
-from .decay import MaxNInsertionsStrategy, TextDecayStrategy
+from ..field import Field
+from ..persistence import DATA_DIR
+from ..record import Record
 from .operations import Deletion, Insertion, Operation
 
 
-class Text(Persistable[Operation]):
+class TextDecayStrategy(Protocol):
 
-    DEFAULT_DECAY_STRATEGY: TextDecayStrategy = MaxNInsertionsStrategy()
-    DEFAULT_PERSISTENCE_STRATEGY: PersistenceStrategy[Text] = NoOpPersistenceStrategy()
+    def apply(self, text: Text) -> list[Operation]: ...
+
+    def update_callback(self, text: Text) -> None:
+        pass
+
+    def periodic_decay(self, text: Text) -> None:
+        pass
+
+
+class MaxNInsertionsStrategy(TextDecayStrategy):
+
+    def __init__(self) -> None:
+        self.max_n: int = int(os.environ.get("HUMUS_TEXT_MAX_INSERTIONS", 100))
+
+    @override
+    def apply(self, text: Text) -> list[Operation]:
+        new_ops: list[Operation] = []
+        n_ops = len([op for op in text.ops if isinstance(op, Insertion)])
+        to_delete = max(0, n_ops - self.max_n)
+        for op in text.ops:
+            if to_delete <= 0 or not isinstance(op, Insertion):
+                new_ops.append(op)
+            else:
+                to_delete -= 1
+        return new_ops
+
+    @override
+    def update_callback(self, text: Text) -> None:
+        text.ops = self.apply(text)
+
+
+class ConstantSpaceStrategy(TextDecayStrategy):
+    def __init__(self) -> None:
+        self.size: int = int(os.environ.get("HUMUS_TEXT_CONSTANT_SPACE_LIMIT", 1024))
+
+    @override
+    def apply(self, text: Text) -> list[Operation]:
+        overflow = text.size - self.size
+        new_ops: list[Operation] = []
+        for op in text.ops:
+            if overflow > 0:
+                overflow -= op.size
+            else:
+                new_ops.append(op)
+        return new_ops
+
+    @override
+    def update_callback(self, text: Text) -> None:
+        text.ops = self.apply(text)
+
+
+class RandomlyExponentialStrategy(TextDecayStrategy):
+
+    def __init__(self) -> None:
+        self.halflife: float = float(
+            os.environ.get("HUMUS_TEXT_RANDOM_EXPONENTIAL_HALFLIFE", 300)
+        )
+
+    @override
+    def apply(self, text: Text, now: float | None = None) -> list[Operation]:
+        if now is None:
+            now = time()
+        new_ops: list[Operation] = []
+        for op in text.ops:
+            age = now - op.timestamp
+            decay_prob = 1 - 2 ** (-age / self.halflife)
+            print(age, decay_prob, op)
+            if random() >= decay_prob:
+                new_ops.append(op)
+        return new_ops
+
+    @override
+    def update_callback(self, text: Text) -> None:
+        text.ops = self.apply(text)
+
+
+DECAY_STRATEGIES: dict[str, Callable[[], TextDecayStrategy]] = {
+    "max_n": MaxNInsertionsStrategy,
+    "constant_space": ConstantSpaceStrategy,
+    "random_exponential": RandomlyExponentialStrategy,
+}
+
+
+class Text(Field[str]):
 
     def __init__(
         self,
-        initial_value: str | None = None,
-        ops: list[Operation] | None = None,
-        decay_strategy: TextDecayStrategy | None = None,
-        persistence_strategy: PersistenceStrategy[Text] | None = None,
-    ):
-        if decay_strategy is None:
-            decay_strategy = Text.DEFAULT_DECAY_STRATEGY
-        self.decay_strategy: TextDecayStrategy = decay_strategy
+        record: Record,
+        key: str,
+    ) -> None:
+        super(Text, self).__init__(record, key)
+        self.decay_strategy: TextDecayStrategy = DECAY_STRATEGIES[
+            os.environ.get("HUMUS_TEXT_DECAY_STRATEGY", "random_exponential")
+        ]()
 
-        if persistence_strategy is None:
-            persistence_strategy = Text.DEFAULT_PERSISTENCE_STRATEGY
-        self.persistence_strategy: PersistenceStrategy[Text] = persistence_strategy
+        self.ops: list[Operation] = []
 
-        if ops is None:
-            ops = []
-        self.ops: list[Operation] = ops
-
-        if initial_value is not None:
-            _ = self.update(initial_value)
+    @property
+    def filename(self) -> str:
+        return f"{DATA_DIR}/{self.record.id}/text_{self.key}.csv"
 
     @override
-    @classmethod
-    def from_persisted(
-        cls,
-        items: Iterable[Serialization],
-        persistence_strategy: PersistenceStrategy[Text],
-        **kwargs: object,
-    ) -> Self:
+    def load(self) -> None:
         ops: list[Operation] = []
-        decay_strategy = cast(TextDecayStrategy, kwargs["decay_strategy"])
-        for item in items:
-            ops.append(Operation.from_serialized(item))
-        return cls(
-            ops=ops,
-            decay_strategy=decay_strategy,
-            persistence_strategy=persistence_strategy,
-        )
+        with open(self.filename) as file:
+            reader = csv.reader(file)
+            for row in reader:
+                ops.append(Operation.from_serialized(tuple(row)))
+        self.ops = ops
+
+    @override
+    def save(self) -> None:
+        with open(self.filename, "w") as file:
+            writer = csv.writer(file)
+            for op in self.ops:
+                writer.writerow(op.serialization)
 
     @override
     def __repr__(self) -> str:
@@ -69,6 +142,7 @@ class Text(Persistable[Operation]):
         )
 
     @property
+    @override
     def value(self) -> str:
         return self.apply_ops("", lambda op, current, previous: current)
 
@@ -94,11 +168,6 @@ class Text(Persistable[Operation]):
     def size(self) -> int:
         return sum(op.size for op in self.ops)
 
-    @property
-    @override
-    def serializable_items(self) -> Iterable[Operation]:
-        return self.ops
-
     def apply_ops[T](self, initial: T, callback: Callable[[Operation, str, T], T]) -> T:
         current = initial
         current_text = ""
@@ -111,9 +180,10 @@ class Text(Persistable[Operation]):
         self.ops = self.decay_strategy.apply(self)
         return self
 
-    def update(self, new_value: str) -> Self:
+    @override
+    def update(self, value: str) -> Self:
         matcher: SequenceMatcher[str] = SequenceMatcher(
-            None, self.value, new_value, autojunk=False
+            None, self.value, value, autojunk=False
         )
         offset: int = 0  # tracks how prior insertions/deletions shift positions
         ops: list[Operation] = []
@@ -121,19 +191,24 @@ class Text(Persistable[Operation]):
             if tag == "equal":
                 pass
             elif tag == "insert":
-                ops.append(Insertion(i1 + offset, new_value[j1:j2]))
+                ops.append(Insertion(i1 + offset, value[j1:j2]))
                 offset += j2 - j1
             elif tag == "delete":
                 ops.append(Deletion(i1 + offset, i2 - i1))
                 offset -= i2 - i1
             elif tag == "replace":
                 ops.append(Deletion(i1 + offset, i2 - i1))
-                ops.append(Insertion(i1 + offset, new_value[j1:j2]))
+                ops.append(Insertion(i1 + offset, value[j1:j2]))
                 offset += (j2 - j1) - (i2 - i1)
         self.ops.extend(ops)
         self.decay_strategy.update_callback(self)
-        self.persistence_strategy.update_callback(self)
+        self.save()
         return self
+
+    @override
+    def periodic_decay(self) -> None:
+        self.decay_strategy.periodic_decay(self)
+        self.save()
 
     def trace_ops(self) -> None:
         for op in self.ops:

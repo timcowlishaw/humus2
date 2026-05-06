@@ -1,19 +1,26 @@
 import html
 from time import time
+from typing import cast
 
 from flask import Flask, redirect, render_template, request
 from flask.typing import ResponseReturnValue
 
-from ..persistence import CSVPersistenceStrategy, PersistenceStrategy
+from ..field import StableField
+from ..record import Record
 from ..text import Operation, Text
-from ..text.decay import RandomlyExponentialStrategy
 from ..text.formatters import LabelledRangeFormatter
 
-decay_strategy = RandomlyExponentialStrategy(halflife=300)
-persistence_strategy: PersistenceStrategy[Text] = CSVPersistenceStrategy(
-    "./data/test.csv"
+halflife = 30
+
+record = Record(  # noqa
+    id="test",
+    fields=[  # TODO Tim what's the typing problem here?
+        ("text", Text),
+        ("x", StableField[int]),
+        ("y", StableField[int]),
+    ],
 )
-text = persistence_strategy.reconstruct(Text, decay_strategy=decay_strategy)
+record.load()
 
 app = Flask(__name__)
 
@@ -23,9 +30,9 @@ def index() -> ResponseReturnValue:
     def age_class(op: Operation) -> str:
         now = time()
         age = now - op.timestamp
-        if age > 200:
+        if age > 2 / 3 * halflife:
             return "old old-3"
-        elif age > 100:
+        elif age > 1 / 3 * halflife:
             return "old old-2"
         else:
             return "old old-1"
@@ -35,10 +42,14 @@ def index() -> ResponseReturnValue:
         age_class,
     )
 
-    return render_template("index.html", text=age_formatter.format(text))
+    return render_template(
+        "index.html", text=age_formatter.format(cast(Text, record.fields["text"]))
+    )
 
 
+# TODO Tim, get the window moving around. Then deal with multiples
+# , with like a DB class.
 @app.post("/")
 def update() -> ResponseReturnValue:
-    _ = text.update(request.form["text"])
+    record["text"] = request.form["text"]
     return redirect("/")
