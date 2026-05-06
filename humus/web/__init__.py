@@ -10,7 +10,7 @@ from ..record import Record
 from ..text import Operation, Text
 from ..text.formatters import LabelledRangeFormatter
 
-halflife = 30
+halflife = 300
 
 record = Record(  # noqa
     id="test",
@@ -43,7 +43,10 @@ def index() -> ResponseReturnValue:
     )
 
     return render_template(
-        "index.html", text=age_formatter.format(cast(Text, record.fields["text"]))
+        "index.html",
+        text=age_formatter.format(cast(Text, record.fields["text"])),
+        x=record.fields["x"].value or 50,
+        y=record.fields["y"].value or 50,
     )
 
 
@@ -51,5 +54,6 @@ def index() -> ResponseReturnValue:
 # , with like a DB class.
 @app.post("/")
 def update() -> ResponseReturnValue:
-    record["text"] = request.form["text"]
+    for key in request.form:
+        record[key] = request.form[key]
     return redirect("/")

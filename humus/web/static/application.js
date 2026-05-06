@@ -108,11 +108,18 @@ document.addEventListener("DOMContentLoaded", (loadEvent) => {
     }
   });
 
-  window.addEventListener("mouseup", () => {
+  window.addEventListener("mouseup", async () => {
     panning = false;
     wrapper.classList.remove("panning");
     if (draggable) {
       draggable.classList.remove("dragging");
+      data = new FormData();
+      data.set("x", parseInt(draggable.style.left));
+      data.set("y", parseInt(draggable.style.top));
+      await fetch("/", {
+        method: "POST",
+        body: data,
+      });
       draggable = null;
     }
   });
@@ -154,10 +161,17 @@ document.addEventListener("DOMContentLoaded", (loadEvent) => {
     { passive: false },
   );
 
-  wrapper.addEventListener("touchend", () => {
+  wrapper.addEventListener("touchend", async () => {
     panning = false;
     if (draggable) {
       draggable.classList.remove("dragging");
+      data = new FormData();
+      data.set("x", parseInt(draggable.style.left));
+      data.set("y", parseInt(draggable.style.top));
+      await fetch("/", {
+        method: "POST",
+        body: data,
+      });
       draggable = null;
     }
   });

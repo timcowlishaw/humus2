@@ -35,6 +35,13 @@ body {
   border: 1px solid #000;
 }
 
+.text-inner {
+  position: absolute;
+  background: white;
+  border-top: 1px solid #000;
+  inset: 15px 0 0;
+}
+
 #form {
   position: absolute;
   bottom: 1rem;
