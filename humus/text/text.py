@@ -113,7 +113,9 @@ class Text(Field[str]):
 
     @property
     def filename(self) -> str:
-        return f"{DATA_DIR}/{self.record.id}/text_{self.key}.csv"
+        return (
+            f"{DATA_DIR}/{self.record.table.name}/{self.record.id}/text_{self.key}.csv"
+        )
 
     @override
     def load(self) -> None:
@@ -180,7 +182,7 @@ class Text(Field[str]):
         return self
 
     @override
-    def update(self, value: str) -> Self:
+    def update(self, value: str) -> None:
         matcher: SequenceMatcher[str] = SequenceMatcher(
             None, self.value, value, autojunk=False
         )
@@ -202,7 +204,6 @@ class Text(Field[str]):
         self.ops.extend(ops)
         self.decay_strategy.update_callback(self)
         self.save()
-        return self
 
     @override
     def periodic_decay(self) -> None:

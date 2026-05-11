@@ -7,20 +7,21 @@ from flask.typing import ResponseReturnValue
 
 from ..field import StableField
 from ..record import Record
+from ..table import Table
 from ..text import Operation, Text
 from ..text.formatters import LabelledRangeFormatter
 
 halflife = 300
 
-record = Record(  # noqa
-    id="test",
+table = Table(  # noqa
+    name="notes",
     fields=[  # TODO Tim what's the typing problem here?
         ("text", Text),
         ("x", StableField[int]),
         ("y", StableField[int]),
     ],
 )
-record.load()
+table.load()
 
 app = Flask(__name__)
 
@@ -42,6 +43,7 @@ def index() -> ResponseReturnValue:
         age_class,
     )
 
+    record = table["test"]
     return render_template(
         "index.html",
         text=age_formatter.format(cast(Text, record.fields["text"])),
@@ -55,5 +57,5 @@ def index() -> ResponseReturnValue:
 @app.post("/<id>")
 def update(id) -> ResponseReturnValue:
     for key in request.form:
-        record[key] = request.form[key]
+        table[id][key] = request.form[key]
     return redirect("/")

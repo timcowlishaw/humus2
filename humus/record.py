@@ -1,13 +1,23 @@
+# pyright: reportImportCycles=none
+
+from __future__ import annotations
+
 import json
-from typing import Self, cast
+from typing import TYPE_CHECKING, cast
 
 from .field import Field, FieldValue
 from .persistence import DATA_DIR
 
+if TYPE_CHECKING:
+    from .table import Table
+
 
 class Record:
-    def __init__(self, id: str, fields: list[tuple[str, type[Field[FieldValue]]]]):
+    def __init__(
+        self, id: str, table: Table, fields: list[tuple[str, type[Field[FieldValue]]]]
+    ):
         self.id: str = id
+        self.table: Table = table
         self.fields: dict[str, Field[FieldValue]] = {}
         self.persisted_values: dict[str, FieldValue | None] = {}
         for name, cls in fields:
@@ -25,10 +35,9 @@ class Record:
     def get(self) -> dict[str, FieldValue | None]:
         return {key: field.value for (key, field) in self.fields.items()}
 
-    def update(self, values: dict[str, FieldValue]) -> Self:
+    def update(self, values: dict[str, FieldValue]) -> None:
         for key, value in values.items():
-            self.fields[key] = self.fields[key].update(value)
-        return self
+            self.fields[key].update(value)
 
     def periodic_decay(self) -> None:
         for key in self.fields:
@@ -41,18 +50,20 @@ class Record:
             return None
 
     def __setitem__(self, key: str, value: FieldValue) -> None:
-        _ = self.fields[key].update(value)
+        self.fields[key].update(value)
+        self.save()
 
     @property
     def filename(self) -> str:
-        return f"{DATA_DIR}/{self.id}/values.json"
+        return f"{DATA_DIR}/{self.table.name}/{self.id}/values.json"
 
     def load_persisted_values(self) -> None:
         with open(self.filename) as file:
             self.persisted_values = cast(dict[str, FieldValue | None], json.load(file))
 
     def save_persisted_values(self) -> None:
-        with open(self.filename) as file:
+        print(self.filename)
+        with open(self.filename, "w") as file:
             json.dump(self.persisted_values, file)
 
     def update_persisted_values(self, key: str, value: FieldValue | None) -> None:

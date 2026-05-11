@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import TYPE_CHECKING, Self, cast, override
+from typing import TYPE_CHECKING, cast, override
 
 if TYPE_CHECKING:
     from .record import Record
@@ -26,7 +26,7 @@ class Field[V: FieldValue](ABC):
     def value(self) -> V | None: ...
 
     @abstractmethod
-    def update(self, value: V) -> Self: ...
+    def update(self, value: V) -> None: ...
 
     @abstractmethod
     def load(self) -> None: ...
@@ -45,9 +45,8 @@ class StableField[V: FieldValue](Field[V]):
         self._value: V | None = None
 
     @override
-    def update(self, value: V) -> Self:
+    def update(self, value: V) -> None:
         self._value = value
-        return self
 
     @property
     @override
