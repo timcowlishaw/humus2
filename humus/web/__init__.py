@@ -52,8 +52,8 @@ def index() -> ResponseReturnValue:
 
 # TODO Tim, get the window moving around. Then deal with multiples
 # , with like a DB class.
-@app.post("/")
-def update() -> ResponseReturnValue:
+@app.post("/<id>")
+def update(id) -> ResponseReturnValue:
     for key in request.form:
         record[key] = request.form[key]
     return redirect("/")

@@ -13,16 +13,14 @@
     <body>
         <div id="wrapper">
             <div id="world">
-                <div id="text-container"
-                     class="draggable"
+                <div class="text-container"
+                     data-record-id="test"
                      style="left: {{ x }}px;
                             top: {{ y }}px">
                     <div class="text-inner">
-                        <pre class="text" contenteditable="true" id="text-display">{{ text|safe }}</pre>
-                        <form action="{{ url_for("update") }}" method="post" id="form">
-                            <input name="text" type="hidden" id="text-input" />
-                            <input type="submit" value="Update!" />
-                        </form>
+                        <pre data-last-saved="{{text | safe}}"
+                             contenteditable="true"
+                             class="text-display">{{ text|safe }}</pre>
                     </div>
                 </div>
             </div>

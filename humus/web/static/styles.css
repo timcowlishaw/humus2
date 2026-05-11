@@ -25,7 +25,7 @@ body {
   will-change: transform;
 }
 
-#text-container {
+.text-container {
   position: absolute;
   width: 33%;
   height: 20rem;
@@ -33,6 +33,7 @@ body {
   overflow: auto;
   background: url("bumpy.gif") repeat;
   border: 1px solid #000;
+  z-index: 999;
 }
 
 .text-inner {
@@ -42,14 +43,14 @@ body {
   inset: 15px 0 0;
 }
 
-#form {
+.form {
   position: absolute;
   bottom: 1rem;
   right: 1rem;
   z-index: 2;
 }
 
-#text-display {
+.text-display {
   background: white;
   position: absolute;
   white-space: pre-wrap;
@@ -70,6 +71,7 @@ body {
   right: 20px;
   font-family: monospace;
   text-align: right;
+  z-index: -1;
 }
 
 .old-1 {

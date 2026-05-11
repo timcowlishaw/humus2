@@ -1,23 +1,48 @@
-document.addEventListener("DOMContentLoaded", (loadEvent) => {
-  const form = document.getElementById("form");
-  const input = document.getElementById("text-input");
-  const display = document.getElementById("text-display");
+let panning = false,
+  draggable = null,
+  tx = 0,
+  ty = 0,
+  scale = 1,
+  dragOffsetX,
+  dragOffsetY,
+  panStartX,
+  panStartY,
+  panStartTx,
+  panStartTy;
+const MIN_SCALE = 0.1,
+  MAX_SCALE = 8,
+  RESIZE_HANDLE_SIZE = 17;
+
+function debounce(fn, delay) {
+  let timer;
+  return (...args) => {
+    clearTimeout(timer);
+    timer = setTimeout(() => fn(...args), delay);
+  };
+}
+
+const saveContent = async (id, display) => {
+  const last = display.dataset["lastSaved"];
+  const content = display.innerText;
+  if (last === content) return;
+  data = new FormData();
+  data.set("text", content);
+  await fetch(`${id}`, {
+    method: "POST",
+    body: data,
+  });
+  display.dataset["lastSaved"] = content;
+  unsavedChanges = document.querySelector(".unsaved-changes");
+  if (unsavedChanges) {
+    unsavedChanges.classList.remove("unsaved-changes");
+  }
+};
+
+const debouncedSaveContent = debounce(saveContent, 1500);
+
+function setupWorldScroll() {
   const world = document.getElementById("world");
   const wrapper = document.getElementById("wrapper");
-
-  let panning = false,
-    draggable = null,
-    tx = 0,
-    ty = 0,
-    scale = 1,
-    dragOffsetX,
-    dragOffsetY,
-    panStartX,
-    panStartY,
-    panStartTx,
-    panStartTy;
-  const MIN_SCALE = 0.1,
-    MAX_SCALE = 8;
 
   function applyTransform() {
     world.style.transform = `translate(${tx}px,${ty}px) scale(${scale})`;
@@ -25,43 +50,6 @@ document.addEventListener("DOMContentLoaded", (loadEvent) => {
 
   function clampScale(s) {
     return Math.min(MAX_SCALE, Math.max(MIN_SCALE, s));
-  }
-
-  function setupDraggable(element) {
-    element.addEventListener("mousedown", (e) => {
-      e.stopPropagation();
-      draggable = element;
-      element.classList.add("dragging");
-
-      const rect = wrapper.getBoundingClientRect();
-      const mx = e.clientX - rect.left;
-      const my = e.clientY - rect.top;
-
-      const elementX = parseFloat(element.style.left);
-      const elementY = parseFloat(element.style.top);
-      dragOffsetX = (mx - tx) / scale - elementX;
-      dragOffsetY = (my - ty) / scale - elementY;
-    });
-
-    element.addEventListener(
-      "touchstart",
-      (e) => {
-        e.stopPropagation();
-        draggable = element;
-        element.classList.add("dragging");
-
-        const rect = wrapper.getBoundingClientRect();
-        const mx = e.clientX - rect.left;
-        const my = e.clientY - rect.top;
-
-        const elementX = parseFloat(element.style.left);
-        const elementY = parseFloat(element.style.top);
-
-        dragOffsetX = (mx - tx) / scale - elementX;
-        dragOffsetY = (my - ty) / scale - elementY;
-      },
-      { passsive: true },
-    );
   }
 
   wrapper.addEventListener(
@@ -114,9 +102,10 @@ document.addEventListener("DOMContentLoaded", (loadEvent) => {
     if (draggable) {
       draggable.classList.remove("dragging");
       data = new FormData();
+      const id = draggable.dataset["recordId"];
       data.set("x", parseInt(draggable.style.left));
       data.set("y", parseInt(draggable.style.top));
-      await fetch("/", {
+      await fetch(`/${id}`, {
         method: "POST",
         body: data,
       });
@@ -165,26 +154,82 @@ document.addEventListener("DOMContentLoaded", (loadEvent) => {
     panning = false;
     if (draggable) {
       draggable.classList.remove("dragging");
+      const id = draggable.dataset["recordId"];
       data = new FormData();
       data.set("x", parseInt(draggable.style.left));
       data.set("y", parseInt(draggable.style.top));
-      await fetch("/", {
+      await fetch(`/${id}`, {
         method: "POST",
         body: data,
       });
       draggable = null;
     }
   });
+}
 
-  wrapper.addEventListener("dblclick", () => {
-    tx = 0;
-    ty = 0;
-    scale = 1;
-    applyTransform();
+function setupDraggable(element) {
+  element.addEventListener("mousedown", (e) => {
+    e.stopPropagation();
+    const elementRect = e.target.getBoundingClientRect();
+    const nearRightEdge = e.clientX >= elementRect.right - RESIZE_HANDLE_SIZE;
+    const nearBottomEdge = e.clientY >= elementRect.bottom - RESIZE_HANDLE_SIZE;
+    if (nearRightEdge && nearBottomEdge) return;
+
+    draggable = element;
+    element.classList.add("dragging");
+
+    const rect = wrapper.getBoundingClientRect();
+    const mx = e.clientX - rect.left;
+    const my = e.clientY - rect.top;
+
+    const elementX = parseFloat(element.style.left);
+    const elementY = parseFloat(element.style.top);
+    dragOffsetX = (mx - tx) / scale - elementX;
+    dragOffsetY = (my - ty) / scale - elementY;
   });
 
-  form.addEventListener("submit", (_submitEvent) => {
-    input.value = display.innerText;
+  element.addEventListener(
+    "touchstart",
+    (e) => {
+      if (e.target.closest("textarea")) return;
+      e.stopPropagation();
+      const elementRect = e.target.getBoundingClientRect();
+      const nearRightEdge = e.clientX >= elementRect.right - RESIZE_HANDLE_SIZE;
+      const nearBottomEdge =
+        e.clientY >= elementRect.bottom - RESIZE_HANDLE_SIZE;
+      if (nearRightEdge && nearBottomEdge) return;
+      draggable = element;
+      element.classList.add("dragging");
+
+      const rect = wrapper.getBoundingClientRect();
+      const mx = e.clientX - rect.left;
+      const my = e.clientY - rect.top;
+
+      const elementX = parseFloat(element.style.left);
+      const elementY = parseFloat(element.style.top);
+
+      dragOffsetX = (mx - tx) / scale - elementX;
+      dragOffsetY = (my - ty) / scale - elementY;
+    },
+    { passsive: true },
+  );
+}
+
+function setupTextInput(element) {
+  const id = element.dataset["recordId"];
+  const display = element.querySelector(".text-display");
+
+  wrapper.addEventListener("dblclick", () => {
+    // ADD NEW NOTE TODO
+  });
+
+  display.addEventListener("focus", (e) => {
+    element.classList.add("unsaved-changes");
+  });
+
+  display.addEventListener("blur", (e) => {
+    saveContent(id, display);
+    element.classList.remove("unsaved-changes");
   });
 
   display.addEventListener("beforeinput", (e) => {
@@ -266,9 +311,28 @@ document.addEventListener("DOMContentLoaded", (loadEvent) => {
       sel.removeAllRanges();
       sel.addRange(range);
     }
-  });
 
-  document.querySelectorAll(".draggable").forEach(function (element) {
-    setupDraggable(element);
+    debouncedSaveContent(id, display);
   });
+}
+
+document.addEventListener("DOMContentLoaded", (e) => {
+  setupWorldScroll();
+  document.querySelectorAll(".text-container").forEach(function (element) {
+    setupDraggable(element);
+    setupTextInput(element);
+  });
+  window.addEventListener("beforeunload", (e) => {
+    if (document.querySelector(".unsaved-changes")) e.preventDefault();
+  });
+});
+
+document.addEventListener("visibilitychange", () => {
+  unsavedChanges = document.querySelector(".unsaved-changes");
+  if (document.visibilityState == "hidden" && unsavedChanges) {
+    const id = unsavedChanges.dataset["recordId"];
+    const content = unsavedChanges.querySelector("pre");
+    saveContent(id, content);
+    unsavedChanges.classList.remove("unsaved-changes");
+  }
 });

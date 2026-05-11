@@ -81,7 +81,6 @@ class RandomlyExponentialStrategy(TextDecayStrategy):
         for op in text.ops:
             age = now - op.timestamp
             decay_prob = 1 - 2 ** (-age / self.halflife)
-            print(age, decay_prob, op)
             if random() >= decay_prob:
                 new_ops.append(op)
         return new_ops
