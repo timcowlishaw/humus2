@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import os
 from typing import TYPE_CHECKING, cast
 
 from .field import Field, FieldValue
@@ -55,14 +56,23 @@ class Record:
 
     @property
     def filename(self) -> str:
-        return f"{DATA_DIR}/{self.table.name}/{self.id}/values.json"
+        return f"{self.dirname}/values.json"
+
+    @property
+    def dirname(self) -> str:
+        return f"{DATA_DIR}/{self.table.name}/{self.id}"
 
     def load_persisted_values(self) -> None:
-        with open(self.filename) as file:
-            self.persisted_values = cast(dict[str, FieldValue | None], json.load(file))
+        try:
+            with open(self.filename) as file:
+                self.persisted_values = cast(
+                    dict[str, FieldValue | None], json.load(file)
+                )
+        except FileNotFoundError:
+            pass
 
     def save_persisted_values(self) -> None:
-        print(self.filename)
+        os.makedirs(self.dirname, exist_ok=True)
         with open(self.filename, "w") as file:
             json.dump(self.persisted_values, file)
 

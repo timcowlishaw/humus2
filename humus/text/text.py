@@ -120,14 +120,18 @@ class Text(Field[str]):
     @override
     def load(self) -> None:
         ops: list[Operation] = []
-        with open(self.filename) as file:
-            reader = csv.reader(file)
-            for row in reader:
-                ops.append(Operation.from_serialized(tuple(row)))
+        try:
+            with open(self.filename) as file:
+                reader = csv.reader(file)
+                for row in reader:
+                    ops.append(Operation.from_serialized(tuple(row)))
+        except FileNotFoundError:
+            pass
         self.ops = ops
 
     @override
     def save(self) -> None:
+        os.makedirs(self.record.dirname, exist_ok=True)
         with open(self.filename, "w") as file:
             writer = csv.writer(file)
             for op in self.ops:

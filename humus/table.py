@@ -1,4 +1,7 @@
+import os
+
 from .field import Field, FieldValue
+from .persistence import DATA_DIR
 from .record import Record
 
 
@@ -20,3 +23,11 @@ class Table:
         record = Record(id=id, table=self, fields=self.fields)
         record.load()
         return record
+
+    def all(self) -> list[Record]:
+        records: list[Record] = []
+        for filename in os.listdir(f"{DATA_DIR}/{self.name}"):
+            record = Record(id=filename, table=self, fields=self.fields)
+            record.load()
+            records.append(record)
+        return records

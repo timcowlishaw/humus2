@@ -13,16 +13,9 @@
     <body>
         <div id="wrapper">
             <div id="world">
-                <div class="text-container"
-                     data-record-id="test"
-                     style="left: {{ x }}px;
-                            top: {{ y }}px">
-                    <div class="text-inner">
-                        <pre data-last-saved="{{text}}"
-                             contenteditable="true"
-                             class="text-display">{{ text|safe }}</pre>
-                    </div>
-                </div>
+                {% for record in records %}
+                    {% include "note.html" %}
+                {% endfor %}
             </div>
             <div id="quote">
                 <p>
@@ -38,5 +31,12 @@
             </div>
         </div>
         <script src="{{ url_for('static', filename='application.js') }}"></script>
+        <template id="note-template">
+            <div class="text-container">
+                <div class="text-inner">
+                    <pre contenteditable="true" class="text-display"></pre>
+                </div>
+            </div>
+        </template>
     </body>
 </html>

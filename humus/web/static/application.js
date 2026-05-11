@@ -165,6 +165,19 @@ function setupWorldScroll() {
       draggable = null;
     }
   });
+
+  wrapper.addEventListener("dblclick", (e) => {
+    const template = document.getElementById("note-template");
+    const clone = document.importNode(template.content, true);
+    const container = clone.querySelector(".text-container");
+    const id = crypto.randomUUID();
+    container.dataset["recordId"] = id;
+    container.style.left = `${e.pageX}px`;
+    container.style.top = `${e.pageY}px`;
+    world.appendChild(container);
+    setupDraggable(container);
+    setupTextInput(container);
+  });
 }
 
 function setupDraggable(element) {
@@ -218,10 +231,6 @@ function setupDraggable(element) {
 function setupTextInput(element) {
   const id = element.dataset["recordId"];
   const display = element.querySelector(".text-display");
-
-  wrapper.addEventListener("dblclick", () => {
-    // ADD NEW NOTE TODO
-  });
 
   display.addEventListener("focus", (e) => {
     element.classList.add("unsaved-changes");

@@ -26,34 +26,33 @@ table.load()
 app = Flask(__name__)
 
 
+def age_class(op: Operation) -> str:
+    now = time()
+    age = now - op.timestamp
+    if age > 2 / 3 * halflife:
+        return "old old-3"
+    elif age > 1 / 3 * halflife:
+        return "old old-2"
+    else:
+        return "old old-1"
+
+
+age_formatter = LabelledRangeFormatter(
+    lambda text, label: f'<span class="{label}">{html.escape(text)}</span>',
+    age_class,
+)
+
+
+@app.template_filter()
+def format_text_with_age_styles(record: Record) -> str:
+    return age_formatter.format(cast(Text, record.fields["text"]))
+
+
 @app.get("/")
 def index() -> ResponseReturnValue:
-    def age_class(op: Operation) -> str:
-        now = time()
-        age = now - op.timestamp
-        if age > 2 / 3 * halflife:
-            return "old old-3"
-        elif age > 1 / 3 * halflife:
-            return "old old-2"
-        else:
-            return "old old-1"
-
-    age_formatter = LabelledRangeFormatter(
-        lambda text, label: f'<span class="{label}">{html.escape(text)}</span>',
-        age_class,
-    )
-
-    record = table["test"]
-    return render_template(
-        "index.html",
-        text=age_formatter.format(cast(Text, record.fields["text"])),
-        x=record.fields["x"].value or 50,
-        y=record.fields["y"].value or 50,
-    )
+    return render_template("index.html", records=table.all())
 
 
-# TODO Tim, get the window moving around. Then deal with multiples
-# , with like a DB class.
 @app.post("/<id>")
 def update(id) -> ResponseReturnValue:
     for key in request.form:

@@ -1,0 +1,10 @@
+<div class="text-container"
+     data-record-id="{{ record.id }}"
+     style="left: {{ record.x }}px;
+            top: {{ record.y }}px">
+    <div class="text-inner">
+        <pre data-last-saved="{{record.text}}"
+             contenteditable="true"
+             class="text-display">{{ record|format_text_with_age_styles|safe }}</pre>
+    </div>
+</div>
