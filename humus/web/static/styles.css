@@ -28,6 +28,8 @@ body {
 .text-container {
   position: absolute;
   width: 33%;
+  min-width: 8rem;
+  min-height: 6rem;
   height: 20rem;
   resize: both;
   overflow: auto;
@@ -40,7 +42,9 @@ body {
   position: absolute;
   background: white;
   border-top: 1px solid #000;
-  inset: 15px 0 0;
+  inset: 30px 0 0;
+  display: flex;
+  flex-direction: column;
 }
 
 .form {
@@ -52,7 +56,8 @@ body {
 
 .text-display {
   background: white;
-  position: absolute;
+  flex: 1;
+  min-height: 0;
   white-space: pre-wrap;
   overflow: auto;
   inset: 0 0 1.5rem;
@@ -63,6 +68,54 @@ body {
   &:focus {
     outline: 0 solid transparent;
   }
+}
+
+.note-image {
+  display: block;
+  flex: 0 0 auto;
+  width: 100%;
+  height: auto;
+  max-height: 75%;
+  object-fit: cover;
+  border-bottom: 1px solid #000;
+}
+
+.camera-btn {
+  position: absolute;
+  top: 0;
+  right: 0;
+  height: 30px;
+  width: 40px;
+  padding: 0 4px;
+  border: 0;
+  border-left: 1px solid #000;
+  background: white;
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.camera-panel {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  background: #000;
+  display: flex;
+  flex-direction: column;
+
+  video {
+    flex: 1;
+    min-height: 0;
+    width: 100%;
+    object-fit: contain;
+  }
+}
+
+.camera-bar {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: center;
+  padding: 0.5rem;
 }
 
 #quote {
@@ -85,3 +138,39 @@ body {
 .old-3 {
   background-color: #c93;
 }
+
+#add-controls {
+  background-color: #fd9;
+  font-family: monospace;
+  position: fixed;
+  left: 20px;
+  bottom: 20px;
+  z-index: 1000000;
+  max-width: 200px;
+  border: 3px dashed #000;
+  padding: 1rem;
+}
+
+.controls-inner {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+
+#add-note,
+#add-photo-note {
+  width: 4rem;
+  height: 4rem;
+  border: 1px solid #000;
+  background: white;
+  font-family: monospace;
+  font-size: 1.8rem;
+  line-height: 1;
+  cursor: pointer;
+
+  &:hover {
+    background: #accdff;
+  }
+}
+

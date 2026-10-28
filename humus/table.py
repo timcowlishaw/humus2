@@ -1,14 +1,17 @@
 import os
 
+from typing import Callable
+
 from .field import Field, FieldValue
 from .persistence import DATA_DIR
 from .record import Record
 
 
 class Table:
-    def __init__(self, name: str, fields: list[tuple[str, type[Field[FieldValue]]]]):
+    def __init__(self, name: str, fields: list[tuple[str, type[Field[FieldValue]]]], destruction_strategy : Callable[[Record], bool] | None = None):
         self.name: str = name
         self.fields: list[tuple[str, type[Field[FieldValue]]]] = fields
+        self.destruction_strategy : Callable[[Record], bool] | None = destruction_strategy
 
     def load(self) -> None:
         pass
@@ -23,6 +26,10 @@ class Table:
         record = Record(id=id, table=self, fields=self.fields)
         record.load()
         return record
+
+    def periodic_decay(self) -> None:
+        for record in self.all():
+            record.periodic_decay()
 
     def all(self) -> list[Record]:
         records: list[Record] = []

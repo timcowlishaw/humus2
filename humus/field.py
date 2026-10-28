@@ -9,7 +9,7 @@ if TYPE_CHECKING:
     from .record import Record
 
 
-type FieldValue = str | int | float | bool
+type FieldValue = str | int | float | bool | bytes
 
 
 class Field[V: FieldValue](ABC):

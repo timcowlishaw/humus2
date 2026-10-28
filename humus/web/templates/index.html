@@ -17,18 +17,21 @@
                     {% include "note.html" %}
                 {% endfor %}
             </div>
-            <div id="quote">
-                <p>
-                    <i>"Put everything on the rotchain, the very mutable ledger where things change constantly and kind of just disappear over time."</i>-- <a href="https://web.archive.org/web/20211118074812/https://twitter.com/APndrgrst/status/1461239757246136321"
-    target="_blank">(Anna Prendergrast (@Aprndrgrst), 18th November 2021)</a>
-                </p>
-                <p>
-                    <b>Click and drag in empty space to move, scroll to zoom, double-click to add a new note.</b>
-                </p>
-                <p>
-                    Made by <a href="https://www.timcowlishaw.co.uk" target="_blank">Tim</a>.
-                </p>
+        </div>
+        <div id="add-controls">
+          <p>Això es <i>humus</i> - un petit centre de dades comunitari, que és una mica oblidós.</p>
+          <p>Tots els seus records s'esvaeixen, de mica en mica.</p>
+          <p><strong>Què tens al cap?</strong> - Aporta un imatge o texte.</p>
+          <div class="controls-inner">
+            <div>
+              <button id="add-note" type="button" aria-label="Add a new note" title="Add a new note">📝</button>
+              Escriu una nota
             </div>
+            <div>
+              <button id="add-photo-note" type="button" aria-label="Add a new note with a photo" title="Add a new note with a photo">📸</button>
+              Fes una foto
+            </div>
+          </div>
         </div>
         <script src="{{ url_for('static', filename='application.js') }}"></script>
         <template id="note-template">

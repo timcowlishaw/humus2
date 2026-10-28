@@ -4,7 +4,9 @@ from __future__ import annotations
 
 import json
 import os
-from typing import TYPE_CHECKING, cast
+
+from shutil import rmtree
+from typing import TYPE_CHECKING, cast, Callable
 
 from .field import Field, FieldValue
 from .persistence import DATA_DIR
@@ -43,6 +45,11 @@ class Record:
     def periodic_decay(self) -> None:
         for key in self.fields:
             self.fields[key].periodic_decay()
+        if self.table.destruction_strategy:
+            print("destruction strategy!")
+            destroy = self.table.destruction_strategy(self)
+            if destroy:
+                self.destroy()
 
     def __getitem__(self, key: str) -> FieldValue | None:
         if field := self.fields.get(key):
@@ -79,3 +86,6 @@ class Record:
     def update_persisted_values(self, key: str, value: FieldValue | None) -> None:
         self.persisted_values[key] = value
         self.save_persisted_values()
+
+    def destroy(self):
+        rmtree(self.dirname)

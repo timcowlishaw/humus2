@@ -3,7 +3,8 @@ from __future__ import annotations
 import csv
 import os
 from difflib import SequenceMatcher
-from random import random
+from random import choice, random, randrange
+from string import printable
 from time import time
 from typing import Callable, Protocol, Self, override
 
@@ -88,6 +89,16 @@ class RandomlyExponentialStrategy(TextDecayStrategy):
     @override
     def update_callback(self, text: Text) -> None:
         text.ops = self.apply(text)
+
+    @override
+    def periodic_decay(self, text : Text) -> None:
+        noise_prob = float(os.environ.get("HUMUS_TEXT_RANDOM_EXPONENTIAL_NOISE_PROB", "0.2"))
+        if random() <= noise_prob:
+            value = text.value
+            ix = randrange(len(value))
+            replace = choice(printable)
+            value = value[0:ix] + replace + value[ix+1:]
+            text.update(value)
 
 
 DECAY_STRATEGIES: dict[str, Callable[[], TextDecayStrategy]] = {
