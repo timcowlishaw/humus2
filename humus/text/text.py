@@ -91,13 +91,15 @@ class RandomlyExponentialStrategy(TextDecayStrategy):
         text.ops = self.apply(text)
 
     @override
-    def periodic_decay(self, text : Text) -> None:
-        noise_prob = float(os.environ.get("HUMUS_TEXT_RANDOM_EXPONENTIAL_NOISE_PROB", "0.2"))
+    def periodic_decay(self, text: Text) -> None:
+        noise_prob = float(
+            os.environ.get("HUMUS_TEXT_RANDOM_EXPONENTIAL_NOISE_PROB", "0.2")
+        )
         if random() <= noise_prob:
             value = text.value
             ix = randrange(len(value))
             replace = choice(printable)
-            value = value[0:ix] + replace + value[ix+1:]
+            value = value[0:ix] + replace + value[ix + 1 :]
             text.update(value)
 
 

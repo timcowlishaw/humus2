@@ -1,5 +1,4 @@
 import os
-
 from typing import Callable
 
 from .field import Field, FieldValue
@@ -8,10 +7,17 @@ from .record import Record
 
 
 class Table:
-    def __init__(self, name: str, fields: list[tuple[str, type[Field[FieldValue]]]], destruction_strategy : Callable[[Record], bool] | None = None):
+    def __init__(
+        self,
+        name: str,
+        fields: list[tuple[str, type[Field[FieldValue]]]],
+        destruction_strategy: Callable[[Record], bool] | None = None,
+    ):
         self.name: str = name
         self.fields: list[tuple[str, type[Field[FieldValue]]]] = fields
-        self.destruction_strategy : Callable[[Record], bool] | None = destruction_strategy
+        self.destruction_strategy: Callable[[Record], bool] | None = (
+            destruction_strategy
+        )
 
     def load(self) -> None:
         pass

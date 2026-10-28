@@ -4,9 +4,8 @@ from __future__ import annotations
 
 import json
 import os
-
 from shutil import rmtree
-from typing import TYPE_CHECKING, cast, Callable
+from typing import TYPE_CHECKING, Callable, cast
 
 from .field import Field, FieldValue
 from .persistence import DATA_DIR

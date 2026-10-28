@@ -19,19 +19,29 @@
             </div>
         </div>
         <div id="add-controls">
-          <p>Això es <i>humus</i> - un petit centre de dades comunitari, que és una mica oblidós.</p>
-          <p>Tots els seus records s'esvaeixen, de mica en mica.</p>
-          <p><strong>Què tens al cap?</strong> - Aporta un imatge o texte.</p>
-          <div class="controls-inner">
-            <div>
-              <button id="add-note" type="button" aria-label="Add a new note" title="Add a new note">📝</button>
-              Escriu una nota
+            <p>
+                Això es <i>humus</i> - un petit centre de dades comunitari, que és una mica oblidós.
+            </p>
+            <p>Tots els seus records s'esvaeixen, de mica en mica.</p>
+            <p>
+                <strong>Què tens al cap?</strong> - Aporta un imatge o texte.
+            </p>
+            <div class="controls-inner">
+                <div>
+                    <button id="add-note"
+                            type="button"
+                            aria-label="Add a new note"
+                            title="Add a new note">📝</button>
+                    Escriu una nota
+                </div>
+                <div>
+                    <button id="add-photo-note"
+                            type="button"
+                            aria-label="Add a new note with a photo"
+                            title="Add a new note with a photo">📸</button>
+                    Fes una foto
+                </div>
             </div>
-            <div>
-              <button id="add-photo-note" type="button" aria-label="Add a new note with a photo" title="Add a new note with a photo">📸</button>
-              Fes una foto
-            </div>
-          </div>
         </div>
         <script src="{{ url_for('static', filename='application.js') }}"></script>
         <template id="note-template">

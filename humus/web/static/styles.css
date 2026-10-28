@@ -157,7 +157,6 @@ body {
   gap: 0.5rem;
 }
 
-
 #add-note,
 #add-photo-note {
   width: 4rem;
@@ -173,4 +172,3 @@ body {
     background: #accdff;
   }
 }
-

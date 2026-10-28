@@ -58,7 +58,10 @@ async function bringToFront(element) {
   const data = new FormData();
   data.set("z", z);
   try {
-    await fetch(`/${element.dataset["recordId"]}`, { method: "POST", body: data });
+    await fetch(`/${element.dataset["recordId"]}`, {
+      method: "POST",
+      body: data,
+    });
   } catch (err) {
     console.warn("Couldn't save note z-index", err);
   }
@@ -163,7 +166,8 @@ async function openCamera(element, id) {
 }
 
 function applyTransform() {
-  document.getElementById("world").style.transform = `translate(${tx}px,${ty}px) scale(${scale})`;
+  document.getElementById("world").style.transform =
+    `translate(${tx}px,${ty}px) scale(${scale})`;
 }
 
 function clampScale(s) {
@@ -174,7 +178,10 @@ function fitToNotes() {
   const notes = document.querySelectorAll("#world > .text-container");
   if (!notes.length) return;
 
-  let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+  let minX = Infinity,
+    minY = Infinity,
+    maxX = -Infinity,
+    maxY = -Infinity;
   notes.forEach((el) => {
     const x = parseFloat(el.style.left) || 0;
     const y = parseFloat(el.style.top) || 0;
@@ -415,81 +422,80 @@ function setupTextInput(element) {
     element.classList.remove("unsaved-changes");
   });
 
-
   function splitOldSpanAtCaret() {
-      const sel = window.getSelection();
-      if (!sel.rangeCount) return;
-      const range = sel.getRangeAt(0);
+    const sel = window.getSelection();
+    if (!sel.rangeCount) return;
+    const range = sel.getRangeAt(0);
 
-      let node = range.startContainer;
-      let oldSpan = null;
-      while (node && node !== display) {
-        if (
-          node.nodeType === Node.ELEMENT_NODE &&
-          node.classList.contains("old")
-        ) {
-          oldSpan = node;
-          break;
-        }
-        node = node.parentNode;
+    let node = range.startContainer;
+    let oldSpan = null;
+    while (node && node !== display) {
+      if (
+        node.nodeType === Node.ELEMENT_NODE &&
+        node.classList.contains("old")
+      ) {
+        oldSpan = node;
+        break;
       }
+      node = node.parentNode;
+    }
 
-      if (!oldSpan) return;
+    if (!oldSpan) return;
 
-      const offset = range.startOffset;
-      const fullText = range.startContainer.textContent;
-      const before = fullText.slice(0, offset);
-      const after = fullText.slice(offset);
+    const offset = range.startOffset;
+    const fullText = range.startContainer.textContent;
+    const before = fullText.slice(0, offset);
+    const after = fullText.slice(offset);
 
-      const userSpan = document.createElement("span");
-      userSpan.className = "user-edit";
-      userSpan.textContent = "";
+    const userSpan = document.createElement("span");
+    userSpan.className = "user-edit";
+    userSpan.textContent = "";
 
-      const parent = oldSpan.parentNode;
-      const oldClass = oldSpan.className;
+    const parent = oldSpan.parentNode;
+    const oldClass = oldSpan.className;
 
-      if (before) {
-        const spanBefore = document.createElement("span");
-        spanBefore.className = oldClass;
-        spanBefore.textContent = before;
-        parent.insertBefore(spanBefore, oldSpan);
-      }
+    if (before) {
+      const spanBefore = document.createElement("span");
+      spanBefore.className = oldClass;
+      spanBefore.textContent = before;
+      parent.insertBefore(spanBefore, oldSpan);
+    }
 
-      parent.insertBefore(userSpan, oldSpan);
+    parent.insertBefore(userSpan, oldSpan);
 
-      if (after) {
-        const spanAfter = document.createElement("span");
-        spanAfter.className = oldClass;
-        spanAfter.textContent = after;
-        parent.insertBefore(spanAfter, oldSpan);
-      }
+    if (after) {
+      const spanAfter = document.createElement("span");
+      spanAfter.className = oldClass;
+      spanAfter.textContent = after;
+      parent.insertBefore(spanAfter, oldSpan);
+    }
 
-      parent.removeChild(oldSpan);
+    parent.removeChild(oldSpan);
 
-      const newRange = document.createRange();
-      newRange.setStart(userSpan, 0);
-      newRange.collapse(true);
-      sel.removeAllRanges();
-      sel.addRange(newRange);
-      return true;
+    const newRange = document.createRange();
+    newRange.setStart(userSpan, 0);
+    newRange.collapse(true);
+    sel.removeAllRanges();
+    sel.addRange(newRange);
+    return true;
   }
 
   function wrapBareTextNodes() {
-      const sel = window.getSelection();
-      const range = sel.rangeCount ? sel.getRangeAt(0) : null;
-      Array.from(display.childNodes).forEach((node) => {
-        if (node.nodeType === Node.TEXT_NODE && node.textContent.length > 0) {
-          const span = document.createElement("span");
-          span.className = "new";
-          display.insertBefore(span, node);
-          span.appendChild(node);
-        }
-      });
-
-      if (range) {
-        sel.removeAllRanges();
-        sel.addRange(range);
+    const sel = window.getSelection();
+    const range = sel.rangeCount ? sel.getRangeAt(0) : null;
+    Array.from(display.childNodes).forEach((node) => {
+      if (node.nodeType === Node.TEXT_NODE && node.textContent.length > 0) {
+        const span = document.createElement("span");
+        span.className = "new";
+        display.insertBefore(span, node);
+        span.appendChild(node);
       }
+    });
+
+    if (range) {
+      sel.removeAllRanges();
+      sel.addRange(range);
+    }
   }
 
   display.addEventListener("compositionstart", () => {
@@ -511,7 +517,7 @@ function setupTextInput(element) {
 
   display.addEventListener("input", (e) => {
     if (e.isComposing) return;
-    wrapBareTextNodes()
+    wrapBareTextNodes();
     debouncedSaveContent(id, display);
   });
 }
@@ -527,8 +533,10 @@ async function addNote({ camera = false } = {}) {
   world.appendChild(container);
   const rect = wrapper.getBoundingClientRect();
   const jitter = () => (Math.random() - 0.5) * 40;
-  const x = (rect.width / 2 - tx) / scale - container.offsetWidth / 2 + jitter();
-  const y = (rect.height / 2 - ty) / scale - container.offsetHeight / 2 + jitter();
+  const x =
+    (rect.width / 2 - tx) / scale - container.offsetWidth / 2 + jitter();
+  const y =
+    (rect.height / 2 - ty) / scale - container.offsetHeight / 2 + jitter();
   container.style.left = `${Math.round(x)}px`;
   container.style.top = `${Math.round(y)}px`;
   container.style.zIndex = ++topZ;
@@ -537,7 +545,7 @@ async function addNote({ camera = false } = {}) {
   setupTextInput(container);
   setupCamera(container);
   setupResize(container);
-  if(!camera) container.querySelector(".text-display").focus();
+  if (!camera) container.querySelector(".text-display").focus();
 
   const data = new FormData();
   data.set("x", Math.round(x));
@@ -545,14 +553,18 @@ async function addNote({ camera = false } = {}) {
   data.set("z", topZ);
   data.set("created", Date.now() / 1000);
   await fetch(`/${id}`, { method: "POST", body: data });
-  if(camera) openCamera(container, id);
+  if (camera) openCamera(container, id);
 }
 
 document.addEventListener("DOMContentLoaded", (e) => {
   setupWorldScroll();
   fitToNotes();
-  document.getElementById("add-note").addEventListener("click", () => addNote());
-  document.getElementById("add-photo-note").addEventListener("click", () => addNote({ camera: true }));
+  document
+    .getElementById("add-note")
+    .addEventListener("click", () => addNote());
+  document
+    .getElementById("add-photo-note")
+    .addEventListener("click", () => addNote({ camera: true }));
   syncTopZ();
   document.querySelectorAll(".text-container").forEach(function (element) {
     setupDraggable(element);
@@ -607,7 +619,10 @@ async function refreshWorld() {
 
   const focused = document.querySelector(".text-display:focus");
   if (focused) {
-    await saveContent(focused.closest(".text-container").dataset["recordId"], focused);
+    await saveContent(
+      focused.closest(".text-container").dataset["recordId"],
+      focused,
+    );
   }
 
   try {

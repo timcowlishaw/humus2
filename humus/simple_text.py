@@ -1,26 +1,24 @@
 import os
-
 from random import choice, random, randrange
 from string import printable
 from typing import override
 
 from .field import Field
-from .record import Record
 from .persistence import DATA_DIR
+from .record import Record
+
 
 class SimpleText(Field[str]):
 
-    _value : str | None
+    _value: str | None
 
-    def __init__(self, record : Record, key : str):
+    def __init__(self, record: Record, key: str):
         super().__init__(record, key)
         self._value = None
 
     @property
     def filename(self) -> str:
-        return (
-            f"{self.record.dirname}/simpletext_{self.key}.txt"
-        )
+        return f"{self.record.dirname}/simpletext_{self.key}.txt"
 
     @property
     @override
@@ -54,6 +52,7 @@ class SimpleText(Field[str]):
             self.load()
             if self.value is not None and len(self.value) > 0:
                 index = randrange(len(self.value))
-                replacement = choice(["", "", "", choice(printable)]) # 1/4 chance of a replacement, 3/4 of a deletion.
-                self.update(self.value[0:index] + replacement + self.value[index+1:])
-
+                replacement = choice(
+                    ["", "", "", choice(printable)]
+                )  # 1/4 chance of a replacement, 3/4 of a deletion.
+                self.update(self.value[0:index] + replacement + self.value[index + 1 :])

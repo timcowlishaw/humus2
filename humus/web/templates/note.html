@@ -2,11 +2,14 @@
      data-record-id="{{ record.id }}"
      style="left: {{ record.x }}px;
             top: {{ record.y }}px;
-            {% if record.w and record.h %}width: {{ record.w }}px; height: {{ record.h }}px;{% endif %}
-            {% if record.z %}z-index: {{ record.z }};{% endif %}">
+            {% if record.w and record.h %}width: {{ record.w }}px;
+            height: {{ record.h }}px;
+            {% endif %} {% if record.z %}z-index: {{ record.z }};{% endif %}">
     <div class="text-inner">
         {% if record["file"] %}
-            <img class="note-image" alt="" src="/{{ record.id }}/file?v={{ record|file_version }}" />
+            <img class="note-image"
+                 alt=""
+                 src="/{{ record.id }}/file?v={{ record|file_version }}" />
         {% endif %}
         <pre data-last-saved="{{record.text}}"
              contenteditable="true"

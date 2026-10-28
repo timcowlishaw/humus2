@@ -3,22 +3,21 @@ from random import random, randrange
 from typing import override
 
 from .field import Field
-from .record import Record
 from .persistence import DATA_DIR
+from .record import Record
+
 
 class File(Field[bytes]):
 
-    _value : bytes | None
+    _value: bytes | None
 
-    def __init__(self, record : Record, key : str):
+    def __init__(self, record: Record, key: str):
         super().__init__(record, key)
         self._value = None
 
     @property
     def filename(self) -> str:
-        return (
-            f"{DATA_DIR}/{self.record.table.name}/{self.record.id}/file_{self.key}"
-        )
+        return f"{DATA_DIR}/{self.record.table.name}/{self.record.id}/file_{self.key}"
 
     @property
     @override
@@ -55,4 +54,3 @@ class File(Field[bytes]):
                 index = randrange(len(data))
                 data[index] = randrange(255)
                 self.update(bytes(data))
-
