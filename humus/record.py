@@ -45,7 +45,6 @@ class Record:
         for key in self.fields:
             self.fields[key].periodic_decay()
         if self.table.destruction_strategy:
-            print("destruction strategy!")
             destroy = self.table.destruction_strategy(self)
             if destroy:
                 self.destroy()

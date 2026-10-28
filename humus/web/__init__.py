@@ -19,8 +19,6 @@ halflife = 300
 
 def remove_record(record: Record) -> bool:
     if record["file"] is None:
-        if record["text"] is None:
-            return True
         if len(record["text"]) == 0:
             return True
 
@@ -69,7 +67,7 @@ def format_simple_text_with_age_styles(record: Record) -> str:
         label = age_class(timestamp)
         return f'<span class="{label}">{html.escape(text)}</span>'
     else:
-        return ""
+        return text or ""
 
 
 @app.template_filter()
