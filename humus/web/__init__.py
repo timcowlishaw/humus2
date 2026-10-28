@@ -19,7 +19,7 @@ halflife = 300
 
 def remove_record(record: Record) -> bool:
     if record["file"] is None:
-        if len(record["text"]) == 0:
+        if record["text"] is not None and len(record["text"]) == 0:
             return True
 
 

@@ -73,7 +73,7 @@ class Record:
                 self.persisted_values = cast(
                     dict[str, FieldValue | None], json.load(file)
                 )
-        except FileNotFoundError:
+        except (FileNotFoundError, json.decoder.JSONDecodeError):
             pass
 
     def save_persisted_values(self) -> None:
